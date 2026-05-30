@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MISTAKE COUNT - Dashboard Kinerja Staf</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+  <header class="hero">
+    <h1>MISTAKE COUNT</h1>
+    <p>Dashboard Kinerja Staf dengan Perhitungan Otomatis</p>
+  </header>
+
+  <main class="container">
+    <section class="card">
+      <h2>1. Tabel Aturan Skor (Logika Konversi)</h2>
+
+      <div class="rules-grid">
+        <div>
+          <h3>Mistake by Txn</h3>
+          <table class="rules-table">
+            <thead>
+              <tr>
+                <th>Range Transaksi</th>
+                <th>Persentase</th>
+                <th>Skor Desimal</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>1-2 Transaksi</td><td>30%</td><td>0.3</td></tr>
+              <tr><td>3-5 Transaksi</td><td>50%</td><td>0.5</td></tr>
+              <tr><td>6-7 Transaksi</td><td>80%</td><td>0.8</td></tr>
+              <tr><td>&gt;7 Transaksi</td><td>100%</td><td>1.0</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div>
+          <h3>Mistake by Amount</h3>
+          <table class="rules-table">
+            <thead>
+              <tr>
+                <th>Range Nominal</th>
+                <th>Persentase</th>
+                <th>Skor Desimal</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>Rp 100K - Rp 200K</td><td>30%</td><td>0.3</td></tr>
+              <tr><td>Rp 201K - Rp 500K</td><td>50%</td><td>0.5</td></tr>
+              <tr><td>Rp 501K - Rp 2.000K</td><td>80%</td><td>0.8</td></tr>
+              <tr><td>&gt; Rp 2.001K</td><td>100%</td><td>1.0</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>2. Tabel Input &amp; Perhitungan Utama</h2>
+
+      <div class="toolbar">
+        <button class="btn primary" id="addStaffBtn">TAMBAH STAF BARU</button>
+        <button class="btn danger" id="resetBtn">RESET SEMUA DATA</button>
+        <button class="btn success" id="exportBtn">EXPORT EXCEL</button>
+      </div>
+
+      <div class="table-wrap">
+        <table id="mainTable">
+          <thead>
+            <tr>
+              <th>Nama Staf</th>
+              <th>Mistake Txn</th>
+              <th>Mistake Amount (Rp)</th>
+              <th>Txn Score</th>
+              <th>Amount Score</th>
+              <th>AVG Score</th>
+              <th>Weighted Score</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="staffBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>3. Tabel Keputusan Akhir (Nominal Potongan)</h2>
+
+      <div class="table-wrap">
+        <table id="decisionTable">
+          <thead>
+            <tr>
+              <th>Nama Staf</th>
+              <th>By Txn Score</th>
+              <th>By Amount Score</th>
+              <th>Average</th>
+              <th>Weighted Score</th>
+              <th>Final Decision</th>
+              <th>Final Amount</th>
+            </tr>
+          </thead>
+          <tbody id="decisionBody"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
