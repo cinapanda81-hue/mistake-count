@@ -11,25 +11,24 @@ function saveData() {
 }
 
 function formatRupiah(value) {
-  const number = Number(value) || 0;
-  return "Rp " + number.toLocaleString("id-ID");
+  return "Rp " + (Number(value) || 0).toLocaleString("id-ID");
 }
 
 function getTxnScore(txn) {
-  const n = Number(txn) || 0;
-  if (n >= 1 && n <= 2) return 0.3;
-  if (n >= 3 && n <= 5) return 0.5;
-  if (n >= 6 && n <= 7) return 0.8;
-  if (n > 7) return 1.0;
+  txn = Number(txn) || 0;
+  if (txn >= 1 && txn <= 2) return 0.3;
+  if (txn >= 3 && txn <= 5) return 0.5;
+  if (txn >= 6 && txn <= 7) return 0.8;
+  if (txn > 7) return 1.0;
   return 0;
 }
 
 function getAmountScore(amount) {
-  const n = Number(amount) || 0;
-  if (n >= 100000 && n <= 200000) return 0.3;
-  if (n >= 201000 && n <= 500000) return 0.5;
-  if (n >= 501000 && n <= 2000000) return 0.8;
-  if (n > 2001000) return 1.0;
+  amount = Number(amount) || 0;
+  if (amount >= 100000 && amount <= 200000) return 0.3;
+  if (amount >= 201000 && amount <= 500000) return 0.5;
+  if (amount >= 501000 && amount <= 2000000) return 0.8;
+  if (amount > 2001000) return 1.0;
   return 0;
 }
 
@@ -38,7 +37,6 @@ function calculateRow(item) {
   const amountScore = getAmountScore(item.amount);
   const avgScore = (txnScore + amountScore) / 2;
   const weightedScore = (txnScore * 0.3) + (amountScore * 0.7);
-
   const amount = Number(item.amount) || 0;
 
   return {
@@ -60,6 +58,17 @@ function getFinalAmount(calc, decision) {
   return calc.weighted;
 }
 
+function updateDataOnly(index, field, value) {
+  staffData[index][field] = value;
+  saveData();
+}
+
+function updateAndRender(index, field, value) {
+  staffData[index][field] = value;
+  saveData();
+  render();
+}
+
 function render() {
   staffBody.innerHTML = "";
   decisionBody.innerHTML = "";
@@ -75,15 +84,45 @@ function render() {
 
     const mainRow = document.createElement("tr");
     mainRow.innerHTML = `
-      <td><input type="text" value="${item.name}" placeholder="Nama Staf" oninput="updateStaff(${index}, 'name', this.value)"></td>
-      <td><input type="number" value="${item.txn}" min="0" placeholder="0" oninput="updateStaff(${index}, 'txn', this.value)"></td>
-      <td><input type="number" value="${item.amount}" min="0" placeholder="0" oninput="updateStaff(${index}, 'amount', this.value)"></td>
+      <td>
+        <input 
+          type="text" 
+          value="${item.name || ""}" 
+          placeholder="Nama Staf"
+          oninput="updateDataOnly(${index}, 'name', this.value)"
+          onblur="render()"
+        >
+      </td>
+
+      <td>
+        <input 
+          type="number" 
+          value="${item.txn || ""}" 
+          min="0" 
+          placeholder="0"
+          oninput="updateDataOnly(${index}, 'txn', this.value)"
+          onblur="render()"
+        >
+      </td>
+
+      <td>
+        <input 
+          type="number" 
+          value="${item.amount || ""}" 
+          min="0" 
+          placeholder="0"
+          oninput="updateDataOnly(${index}, 'amount', this.value)"
+          onblur="render()"
+        >
+      </td>
+
       <td class="score">${calc.txnScore.toFixed(1)}</td>
       <td class="score">${calc.amountScore.toFixed(1)}</td>
       <td class="score">${calc.avgScore.toFixed(2)}</td>
       <td class="score">${calc.weightedScore.toFixed(2)}</td>
       <td><button class="btn small-danger" onclick="deleteStaff(${index})">Hapus</button></td>
     `;
+
     staffBody.appendChild(mainRow);
 
     const finalAmount = getFinalAmount(calc, item.decision);
@@ -96,7 +135,7 @@ function render() {
       <td class="money">${formatRupiah(calc.average)}</td>
       <td class="money">${formatRupiah(calc.weighted)}</td>
       <td>
-        <select onchange="updateStaff(${index}, 'decision', this.value)">
+        <select onchange="updateAndRender(${index}, 'decision', this.value)">
           <option value="weighted" ${item.decision === "weighted" ? "selected" : ""}>Weighted Score</option>
           <option value="txn" ${item.decision === "txn" ? "selected" : ""}>By Txn Score</option>
           <option value="amount" ${item.decision === "amount" ? "selected" : ""}>By Amount Score</option>
@@ -105,6 +144,7 @@ function render() {
       </td>
       <td class="money">${formatRupiah(finalAmount)}</td>
     `;
+
     decisionBody.appendChild(decisionRow);
   });
 }
@@ -112,16 +152,11 @@ function render() {
 function addStaff() {
   staffData.push({
     name: "",
-    txn: 0,
-    amount: 0,
+    txn: "",
+    amount: "",
     decision: "weighted"
   });
-  saveData();
-  render();
-}
 
-function updateStaff(index, field, value) {
-  staffData[index][field] = value;
   saveData();
   render();
 }
@@ -133,8 +168,7 @@ function deleteStaff(index) {
 }
 
 function resetData() {
-  const confirmReset = confirm("Yakin ingin reset semua data?");
-  if (!confirmReset) return;
+  if (!confirm("Yakin ingin reset semua data?")) return;
 
   staffData = [];
   saveData();
@@ -170,6 +204,7 @@ function exportExcel() {
 
   const worksheet = XLSX.utils.json_to_sheet(rows);
   const workbook = XLSX.utils.book_new();
+
   XLSX.utils.book_append_sheet(workbook, worksheet, "Mistake Count");
   XLSX.writeFile(workbook, "mistake-count.xlsx");
 }
