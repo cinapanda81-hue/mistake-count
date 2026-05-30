@@ -58,15 +58,34 @@ function getFinalAmount(calc, decision) {
   return calc.weighted;
 }
 
-function updateDataOnly(index, field, value) {
+function updateData(index, field, value) {
   staffData[index][field] = value;
   saveData();
+  updateCalculatedCells(index);
 }
 
-function updateAndRender(index, field, value) {
-  staffData[index][field] = value;
+function updateCalculatedCells(index) {
+  const item = staffData[index];
+  const calc = calculateRow(item);
+  const finalAmount = getFinalAmount(calc, item.decision);
+
+  document.getElementById(`txnScore-${index}`).textContent = calc.txnScore.toFixed(1);
+  document.getElementById(`amountScore-${index}`).textContent = calc.amountScore.toFixed(1);
+  document.getElementById(`avgScore-${index}`).textContent = calc.avgScore.toFixed(2);
+  document.getElementById(`weightedScore-${index}`).textContent = calc.weightedScore.toFixed(2);
+
+  document.getElementById(`decisionName-${index}`).textContent = item.name || "-";
+  document.getElementById(`byTxn-${index}`).textContent = formatRupiah(calc.byTxn);
+  document.getElementById(`byAmount-${index}`).textContent = formatRupiah(calc.byAmount);
+  document.getElementById(`average-${index}`).textContent = formatRupiah(calc.average);
+  document.getElementById(`weighted-${index}`).textContent = formatRupiah(calc.weighted);
+  document.getElementById(`finalAmount-${index}`).textContent = formatRupiah(finalAmount);
+}
+
+function updateDecision(index, value) {
+  staffData[index].decision = value;
   saveData();
-  render();
+  updateCalculatedCells(index);
 }
 
 function render() {
@@ -81,71 +100,65 @@ function render() {
 
   staffData.forEach((item, index) => {
     const calc = calculateRow(item);
-
-    const mainRow = document.createElement("tr");
-    mainRow.innerHTML = `
-      <td>
-        <input 
-          type="text" 
-          value="${item.name || ""}" 
-          placeholder="Nama Staf"
-          oninput="updateDataOnly(${index}, 'name', this.value)"
-          onblur="render()"
-        >
-      </td>
-
-      <td>
-        <input 
-          type="number" 
-          value="${item.txn || ""}" 
-          min="0" 
-          placeholder="0"
-          oninput="updateDataOnly(${index}, 'txn', this.value)"
-          onblur="render()"
-        >
-      </td>
-
-      <td>
-        <input 
-          type="number" 
-          value="${item.amount || ""}" 
-          min="0" 
-          placeholder="0"
-          oninput="updateDataOnly(${index}, 'amount', this.value)"
-          onblur="render()"
-        >
-      </td>
-
-      <td class="score">${calc.txnScore.toFixed(1)}</td>
-      <td class="score">${calc.amountScore.toFixed(1)}</td>
-      <td class="score">${calc.avgScore.toFixed(2)}</td>
-      <td class="score">${calc.weightedScore.toFixed(2)}</td>
-      <td><button class="btn small-danger" onclick="deleteStaff(${index})">Hapus</button></td>
-    `;
-
-    staffBody.appendChild(mainRow);
-
     const finalAmount = getFinalAmount(calc, item.decision);
 
-    const decisionRow = document.createElement("tr");
-    decisionRow.innerHTML = `
-      <td>${item.name || "-"}</td>
-      <td class="money">${formatRupiah(calc.byTxn)}</td>
-      <td class="money">${formatRupiah(calc.byAmount)}</td>
-      <td class="money">${formatRupiah(calc.average)}</td>
-      <td class="money">${formatRupiah(calc.weighted)}</td>
-      <td>
-        <select onchange="updateAndRender(${index}, 'decision', this.value)">
-          <option value="weighted" ${item.decision === "weighted" ? "selected" : ""}>Weighted Score</option>
-          <option value="txn" ${item.decision === "txn" ? "selected" : ""}>By Txn Score</option>
-          <option value="amount" ${item.decision === "amount" ? "selected" : ""}>By Amount Score</option>
-          <option value="average" ${item.decision === "average" ? "selected" : ""}>Average</option>
-        </select>
-      </td>
-      <td class="money">${formatRupiah(finalAmount)}</td>
+    staffBody.innerHTML += `
+      <tr>
+        <td>
+          <input 
+            type="text" 
+            value="${item.name || ""}" 
+            placeholder="Nama Staf"
+            oninput="updateData(${index}, 'name', this.value)"
+          >
+        </td>
+
+        <td>
+          <input 
+            type="number" 
+            value="${item.txn || ""}" 
+            min="0" 
+            placeholder="0"
+            oninput="updateData(${index}, 'txn', this.value)"
+          >
+        </td>
+
+        <td>
+          <input 
+            type="number" 
+            value="${item.amount || ""}" 
+            min="0" 
+            placeholder="0"
+            oninput="updateData(${index}, 'amount', this.value)"
+          >
+        </td>
+
+        <td class="score" id="txnScore-${index}">${calc.txnScore.toFixed(1)}</td>
+        <td class="score" id="amountScore-${index}">${calc.amountScore.toFixed(1)}</td>
+        <td class="score" id="avgScore-${index}">${calc.avgScore.toFixed(2)}</td>
+        <td class="score" id="weightedScore-${index}">${calc.weightedScore.toFixed(2)}</td>
+        <td><button class="btn small-danger" onclick="deleteStaff(${index})">Hapus</button></td>
+      </tr>
     `;
 
-    decisionBody.appendChild(decisionRow);
+    decisionBody.innerHTML += `
+      <tr>
+        <td id="decisionName-${index}">${item.name || "-"}</td>
+        <td class="money" id="byTxn-${index}">${formatRupiah(calc.byTxn)}</td>
+        <td class="money" id="byAmount-${index}">${formatRupiah(calc.byAmount)}</td>
+        <td class="money" id="average-${index}">${formatRupiah(calc.average)}</td>
+        <td class="money" id="weighted-${index}">${formatRupiah(calc.weighted)}</td>
+        <td>
+          <select onchange="updateDecision(${index}, this.value)">
+            <option value="weighted" ${item.decision === "weighted" ? "selected" : ""}>Weighted Score</option>
+            <option value="txn" ${item.decision === "txn" ? "selected" : ""}>By Txn Score</option>
+            <option value="amount" ${item.decision === "amount" ? "selected" : ""}>By Amount Score</option>
+            <option value="average" ${item.decision === "average" ? "selected" : ""}>Average</option>
+          </select>
+        </td>
+        <td class="money" id="finalAmount-${index}">${formatRupiah(finalAmount)}</td>
+      </tr>
+    `;
   });
 }
 
